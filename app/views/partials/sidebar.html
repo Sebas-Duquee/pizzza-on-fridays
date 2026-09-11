@@ -6,28 +6,41 @@
   </div>
 
   <nav class="sidebar__nav">
-    {% for watchlist in watchlists %}
-    <div class="sidebar__section {% if active_watchlist and active_watchlist.slug == watchlist.slug %}is-active{% endif %}">
-      <a class="sidebar__section-header"
-         href="{{ url_for('dashboard.show_watchlist', slug=watchlist.slug) }}">
-        <span class="sidebar__icon">{{ watchlist.icon }}</span>
-        <span class="sidebar__section-name">{{ watchlist.name }}</span>
+    {% for app in apps %}
+    <div class="sidebar__app {% if active_app and active_app.slug == app.slug %}is-active{% endif %}">
+      <a class="sidebar__app-header" href="{{ url_for(app.endpoint) }}">
+        <span class="sidebar__icon">{{ app.icon }}</span>
+        <span class="sidebar__app-name">{{ app.name }}</span>
       </a>
-      <ul class="sidebar__symbols"
-          data-watchlist-slug="{{ watchlist.slug }}"
-          {% if not (active_watchlist and active_watchlist.slug == watchlist.slug) %}hidden{% endif %}>
-        {% for symbol in watchlist.symbols %}
-        <li>
-          <a class="sidebar__symbol {% if active_symbol and active_symbol.ticker == symbol.ticker and active_watchlist.slug == watchlist.slug %}is-selected{% endif %}"
-             href="{{ url_for('dashboard.show_symbol', slug=watchlist.slug, ticker=symbol.ticker) }}"
-             data-ticker="{{ symbol.ticker }}">
-            <span class="sidebar__symbol-name">{{ symbol.display_name }}</span>
-            <span class="sidebar__symbol-price" data-price>—</span>
-            <span class="sidebar__symbol-change" data-change>—</span>
+
+      {% if app.kind == "watchlists" and active_app and active_app.slug == app.slug %}
+      <div class="sidebar__watchlists">
+        {% for watchlist in watchlists %}
+        <div class="sidebar__section {% if active_watchlist and active_watchlist.slug == watchlist.slug %}is-active{% endif %}">
+          <a class="sidebar__section-header"
+             href="{{ url_for('graficas.show_watchlist', slug=watchlist.slug) }}">
+            <span class="sidebar__icon">{{ watchlist.icon }}</span>
+            <span class="sidebar__section-name">{{ watchlist.name }}</span>
           </a>
-        </li>
+          <ul class="sidebar__symbols"
+              data-watchlist-slug="{{ watchlist.slug }}"
+              {% if not (active_watchlist and active_watchlist.slug == watchlist.slug) %}hidden{% endif %}>
+            {% for symbol in watchlist.symbols %}
+            <li>
+              <a class="sidebar__symbol {% if active_symbol and active_symbol.ticker == symbol.ticker and active_watchlist.slug == watchlist.slug %}is-selected{% endif %}"
+                 href="{{ url_for('graficas.show_symbol', slug=watchlist.slug, ticker=symbol.ticker) }}"
+                 data-ticker="{{ symbol.ticker }}">
+                <span class="sidebar__symbol-name">{{ symbol.display_name }}</span>
+                <span class="sidebar__symbol-price" data-price>—</span>
+                <span class="sidebar__symbol-change" data-change>—</span>
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
         {% endfor %}
-      </ul>
+      </div>
+      {% endif %}
     </div>
     {% endfor %}
   </nav>

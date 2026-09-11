@@ -71,6 +71,7 @@ a {
 }
 
 .layout.is-sidebar-collapsed .sidebar__title,
+.layout.is-sidebar-collapsed .sidebar__app-name,
 .layout.is-sidebar-collapsed .sidebar__section-name,
 .layout.is-sidebar-collapsed .sidebar__symbol-name,
 .layout.is-sidebar-collapsed .sidebar__symbol-price,
@@ -99,12 +100,36 @@ a {
   padding: 0.5rem 0;
 }
 
+.sidebar__app-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.sidebar__app.is-active > .sidebar__app-header {
+  color: var(--accent);
+}
+
+.sidebar__app-header:hover {
+  background: var(--bg-elevated);
+}
+
+.sidebar__watchlists {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
 .sidebar__section-header {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.65rem 0.9rem;
-  font-size: 0.85rem;
+  padding: 0.55rem 0.9rem 0.55rem 1.6rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-muted);
   cursor: pointer;
@@ -268,6 +293,21 @@ a {
   justify-content: center;
   color: var(--text-muted);
   font-size: 0.9rem;
+}
+
+.blank-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.blank-page h1 {
+  color: var(--text);
+  margin-bottom: 0.4rem;
 }
 
 /* ---------- Responsive ---------- */

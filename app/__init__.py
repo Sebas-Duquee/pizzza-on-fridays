@@ -21,6 +21,7 @@ def create_app(config_class: type[Config] = Config) -> Flask:
     app.config.from_object(config_class)
 
     register_blueprints(app)
+    register_context_processors(app)
 
     return app
 
@@ -28,12 +29,24 @@ def create_app(config_class: type[Config] = Config) -> Flask:
 def register_blueprints(app: Flask) -> None:
     """Registra cada controlador.
 
-    Añadir una nueva sección de la aplicación (otra app dentro del panel) es
-    tan simple como crear un nuevo blueprint en ``app/controllers`` y
-    registrarlo aquí.
+    Añadir una nueva app de primer nivel (otra entrada en el sidebar) implica:
+    registrar su entrada en ``app.models.apps.APPS`` y su blueprint aquí.
     """
     from app.controllers.api import bp as api_bp
-    from app.controllers.dashboard import bp as dashboard_bp
+    from app.controllers.graficas import bp as graficas_bp
+    from app.controllers.home import bp as home_bp
+    from app.controllers.varianza import bp as varianza_bp
 
-    app.register_blueprint(dashboard_bp)
+    app.register_blueprint(home_bp)
+    app.register_blueprint(graficas_bp)
+    app.register_blueprint(varianza_bp)
     app.register_blueprint(api_bp)
+
+
+def register_context_processors(app: Flask) -> None:
+    from app.models.apps import APPS
+
+    @app.context_processor
+    def inject_apps() -> dict:
+        # Disponible en todas las plantillas (el sidebar se incluye en base.html).
+        return {"apps": APPS}

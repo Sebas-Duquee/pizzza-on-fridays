@@ -14,21 +14,27 @@ def _fake_quote(ticker):
     )
 
 
-def test_index_redirects_to_default_watchlist(client):
-    response = client.get("/")
-    assert response.status_code == 302
-    assert f"/w/{WATCHLISTS[0].slug}" in response.headers["Location"]
+def test_index_redirects_to_default_app(client):
+    response = client.get("/", follow_redirects=True)
+    assert response.status_code == 200
+    assert f"/graficas/w/{WATCHLISTS[0].slug}" in response.request.path
 
 
 def test_unknown_watchlist_is_404(client):
-    assert client.get("/w/no-existe").status_code == 404
+    assert client.get("/graficas/w/no-existe").status_code == 404
 
 
 def test_show_watchlist_renders_first_symbol(client):
     watchlist = WATCHLISTS[0]
-    response = client.get(f"/w/{watchlist.slug}")
+    response = client.get(f"/graficas/w/{watchlist.slug}")
     assert response.status_code == 200
     assert watchlist.symbols[0].ticker.encode() in response.data
+
+
+def test_varianza_page_is_reachable(client):
+    response = client.get("/analisis-varianza/")
+    assert response.status_code == 200
+    assert "Análisis de Varianza".encode() in response.data
 
 
 def test_api_quote(client, monkeypatch):

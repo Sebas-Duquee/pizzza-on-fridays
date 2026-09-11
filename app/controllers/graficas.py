@@ -1,17 +1,22 @@
-"""Controlador: páginas renderizadas en servidor (sidebar + panel de gráfico)."""
+"""Controlador de la app "Gráficas": sidebar de watchlists + panel de gráfico.
+
+(Antes vivía en ``dashboard.py`` sin agrupar; ahora es una app más dentro
+del registro de ``app/models/apps.py``.)
+"""
 from __future__ import annotations
 
 from flask import Blueprint, abort, redirect, render_template, url_for
 
+from app.models.apps import get_app
 from app.models.watchlists import WATCHLISTS, default_watchlist, get_symbol, get_watchlist
 
-bp = Blueprint("dashboard", __name__)
+bp = Blueprint("graficas", __name__, url_prefix="/graficas")
 
 
 @bp.get("/")
 def index():
     watchlist = default_watchlist()
-    return redirect(url_for("dashboard.show_watchlist", slug=watchlist.slug))
+    return redirect(url_for("graficas.show_watchlist", slug=watchlist.slug))
 
 
 @bp.get("/w/<slug>")
@@ -37,6 +42,7 @@ def show_symbol(slug: str, ticker: str):
 def _render(watchlist, symbol):
     return render_template(
         "dashboard.html",
+        active_app=get_app("graficas"),
         watchlists=WATCHLISTS,
         active_watchlist=watchlist,
         active_symbol=symbol,

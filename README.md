@@ -16,14 +16,18 @@ run.py                   # Punto de entrada: `uv run run.py`
 app/
   __init__.py            # Application factory: create_app()
   models/                # MODEL: acceso a datos, sin Flask
-    watchlists.py          # Registro de secciones del sidebar (extensible)
-    market_data.py          # Descarga + caché de precios/velas (yfinance)
+    apps.py                 # Registro de "apps" de primer nivel del sidebar
+    watchlists.py            # Registro de watchlists de la app "Gráficas"
+    market_data.py            # Descarga + caché de precios/velas (yfinance)
   controllers/            # CONTROLLER: blueprints de Flask
-    dashboard.py             # Páginas HTML (sidebar + gráfico)
-    api.py                    # API JSON que consume el JavaScript
+    home.py                   # "/" -> redirige a la app por defecto
+    graficas.py                # App "Gráficas": sidebar de watchlists + gráfico
+    varianza.py                 # App "Análisis de Varianza" (placeholder)
+    api.py                       # API JSON que consume el JavaScript
   views/                   # VIEW: plantillas Jinja2
     base.html                 # Layout con el sidebar
     dashboard.html             # Cabecera + toolbar + contenedor del gráfico
+    varianza.html               # Página en blanco de Análisis de Varianza
     partials/sidebar.html
   static/
     css/style.css
@@ -34,34 +38,49 @@ tests/                   # pytest (modelos + rutas, con datos simulados)
 
 - **Model**: `app/models/market_data.py` es el único lugar que habla con
   `yfinance`; expone `Quote` (precio actual) y velas OHLC ya cacheadas.
-  `app/models/watchlists.py` es un registro declarativo de las secciones
-  del sidebar.
+  `app/models/apps.py` registra las secciones de primer nivel del sidebar
+  y `app/models/watchlists.py` las watchlists dentro de la app "Gráficas".
 - **View**: plantillas Jinja2 en `app/views` (sí, la carpeta se llama
   `views` y no `templates`, configurado explícitamente en la app factory).
-- **Controller**: dos blueprints — `dashboard` sirve las páginas y `api`
-  sirve JSON al frontend (para refrescar precios sin recargar la página).
+- **Controller**: un blueprint por app (`home`, `graficas`, `varianza`) más
+  `api`, que sirve JSON al frontend (para refrescar precios sin recargar
+  la página).
 
-## Cómo extenderla con nuevas "apps" / secciones
+## Cómo extenderla
 
-Todo el sidebar y sus rutas salen de una única lista en
-`app/models/watchlists.py`. Para añadir una nueva sección (por ejemplo
-"Bancos" o "Energía") solo hace falta añadir una entrada:
+El sidebar tiene dos niveles:
 
-```python
-Watchlist(
-    slug="bancos",
-    name="Bancos",
-    icon="🏦",
-    symbols=(
-        Symbol("JPM", "JPMorgan"),
-        Symbol("BAC", "Bank of America"),
-    ),
-),
-```
+1. **Apps** (`app/models/apps.py`): las secciones de primer nivel, cada
+   una con su propio blueprint. Para añadir una nueva (por ejemplo
+   "Backtesting"):
 
-No hace falta tocar plantillas, controladores ni JavaScript: la nueva
-sección aparece automáticamente en el sidebar, con su propia ruta
-`/w/bancos` y su propio endpoint `/api/watchlist/bancos/quotes`.
+   ```python
+   App(slug="backtesting", name="Backtesting", icon="🧪", endpoint="backtesting.index", kind="blank"),
+   ```
+
+   y crear `app/controllers/backtesting.py` con un blueprint que renderice
+   su propia plantilla, registrado en `app/__init__.py`. Con `kind="blank"`
+   no hace falta tocar el sidebar: solo aparece el enlace.
+
+2. **Watchlists** (`app/models/watchlists.py`), anidadas dentro de la app
+   "Gráficas" (`kind="watchlists"`). Para añadir una nueva sección de
+   tickers (por ejemplo "Bancos"):
+
+   ```python
+   Watchlist(
+       slug="bancos",
+       name="Bancos",
+       icon="🏦",
+       symbols=(
+           Symbol("JPM", "JPMorgan"),
+           Symbol("BAC", "Bank of America"),
+       ),
+   ),
+   ```
+
+   No hace falta tocar plantillas, controladores ni JavaScript: la nueva
+   sección aparece automáticamente en el sidebar, con su propia ruta
+   `/graficas/w/bancos` y su propio endpoint `/api/watchlist/bancos/quotes`.
 
 ## Puesta en marcha
 
