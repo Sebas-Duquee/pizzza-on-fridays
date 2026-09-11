@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}{{ active_symbol.display_name }} · Market Dashboard{% endblock %}
+
+{% block content %}
+<div class="chart-page"
+     id="chart-page"
+     data-ticker="{{ active_symbol.ticker }}"
+     data-watchlist-slug="{{ active_watchlist.slug }}">
+
+  <header class="chart-header">
+    <div class="chart-header__title">
+      <h1 id="symbol-name">{{ active_symbol.display_name }}</h1>
+      <span class="chart-header__ticker">{{ active_symbol.ticker }}</span>
+    </div>
+    <div class="chart-header__price">
+      <span class="chart-header__last" id="last-price">—</span>
+      <span class="chart-header__delta" id="price-delta">—</span>
+    </div>
+  </header>
+
+  <div class="chart-toolbar" id="range-toolbar">
+    <button type="button" class="chart-toolbar__btn" data-range="5d" data-interval="15m">1D</button>
+    <button type="button" class="chart-toolbar__btn" data-range="5d" data-interval="1h">5D</button>
+    <button type="button" class="chart-toolbar__btn is-active" data-range="1mo" data-interval="1d">1M</button>
+    <button type="button" class="chart-toolbar__btn" data-range="6mo" data-interval="1d">6M</button>
+    <button type="button" class="chart-toolbar__btn" data-range="1y" data-interval="1d">1A</button>
+    <button type="button" class="chart-toolbar__btn" data-range="5y" data-interval="1wk">5A</button>
+    <button type="button" class="chart-toolbar__btn" data-range="max" data-interval="1mo">Todo</button>
+  </div>
+
+  <div class="chart-container" id="chart-container">
+    <div class="chart-container__loading" id="chart-loading">Cargando datos de Yahoo Finance…</div>
+  </div>
+</div>
+{% endblock %}

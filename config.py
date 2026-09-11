@@ -1,0 +1,31 @@
+"""Configuración de la aplicación, cargada desde variables de entorno (.env)."""
+from __future__ import annotations
+
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+class Config:
+    """Configuración base. Sirve tal cual para desarrollo."""
+
+    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-me")
+    DEBUG = os.environ.get("FLASK_DEBUG", "1") == "1"
+
+    # Segundos que se conservan en caché los datos descargados de Yahoo Finance,
+    # para no golpear la API en cada refresco de página o petición del sidebar.
+    QUOTE_CACHE_TTL = int(os.environ.get("QUOTE_CACHE_TTL", "15"))
+    CANDLE_CACHE_TTL = int(os.environ.get("CANDLE_CACHE_TTL", "60"))
+
+
+class ProductionConfig(Config):
+    DEBUG = False
+
+
+class TestingConfig(Config):
+    DEBUG = True
+    TESTING = True
+    QUOTE_CACHE_TTL = 0
+    CANDLE_CACHE_TTL = 0
