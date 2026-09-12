@@ -3,8 +3,61 @@
 {% block title %}Análisis de Varianza · Market Dashboard{% endblock %}
 
 {% block content %}
-<div class="blank-page">
-  <h1>Análisis de Varianza</h1>
-  <p class="blank-page__hint">Esta sección está en construcción.</p>
+<div class="varianza-page" id="varianza-page">
+  <header class="varianza-header">
+    <h1>Análisis de Varianza</h1>
+    <p class="varianza-header__hint">
+      Escribe el ticker de un activo de Yahoo Finance y descarga su histórico de precios.
+    </p>
+  </header>
+
+  <form class="varianza-form" id="varianza-form">
+    <input
+      type="text"
+      id="ticker-input"
+      class="varianza-form__input"
+      placeholder="Ticker, p. ej. AAPL"
+      autocomplete="off"
+      required
+    >
+    <select id="range-select" class="varianza-form__select">
+      <option value="1mo">1 mes</option>
+      <option value="6mo" selected>6 meses</option>
+      <option value="1y">1 año</option>
+      <option value="5y">5 años</option>
+      <option value="max">Todo</option>
+    </select>
+    <button type="submit" class="varianza-form__btn" id="fetch-btn">Descargar</button>
+  </form>
+
+  <p class="varianza-status" id="varianza-status" hidden></p>
+
+  <div class="varianza-result" id="varianza-result" hidden>
+    <div class="varianza-result__toolbar">
+      <span id="result-summary"></span>
+      <button type="button" class="varianza-form__btn varianza-form__btn--secondary" id="download-csv-btn">
+        Descargar precios a CSV
+      </button>
+    </div>
+    <div class="varianza-table-wrap">
+      <table class="varianza-table" id="varianza-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Apertura</th>
+            <th>Máximo</th>
+            <th>Mínimo</th>
+            <th>Cierre</th>
+            <th>Volumen</th>
+          </tr>
+        </thead>
+        <tbody id="varianza-table-body"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/varianza.js') }}"></script>
 {% endblock %}

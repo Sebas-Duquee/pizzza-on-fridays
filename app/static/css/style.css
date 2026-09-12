@@ -295,19 +295,130 @@ a {
   font-size: 0.9rem;
 }
 
-.blank-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  text-align: center;
-  color: var(--text-muted);
+/* ---------- Análisis de Varianza ---------- */
+
+.varianza-page {
+  padding: 1.25rem 1.5rem;
+  max-width: 960px;
 }
 
-.blank-page h1 {
+.varianza-header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.3rem;
+}
+
+.varianza-header__hint {
+  color: var(--text-muted);
+  margin: 0 0 1.25rem;
+  font-size: 0.9rem;
+}
+
+.varianza-form {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.varianza-form__input,
+.varianza-form__select {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
   color: var(--text);
-  margin-bottom: 0.4rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.varianza-form__input {
+  flex: 1;
+  min-width: 140px;
+  text-transform: uppercase;
+}
+
+.varianza-form__btn {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.varianza-form__btn:hover {
+  filter: brightness(1.1);
+}
+
+.varianza-form__btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.varianza-form__btn--secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.varianza-status {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
+}
+
+.varianza-status.is-error {
+  color: var(--down);
+}
+
+.varianza-result__toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.varianza-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  max-height: 60vh;
+}
+
+.varianza-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.varianza-table th,
+.varianza-table td {
+  padding: 0.45rem 0.7rem;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.varianza-table th:first-child,
+.varianza-table td:first-child {
+  text-align: left;
+}
+
+.varianza-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.varianza-table tbody tr:hover {
+  background: var(--bg-elevated);
 }
 
 /* ---------- Responsive ---------- */

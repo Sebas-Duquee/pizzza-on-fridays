@@ -35,6 +35,8 @@ def test_varianza_page_is_reachable(client):
     response = client.get("/analisis-varianza/")
     assert response.status_code == 200
     assert "Análisis de Varianza".encode() in response.data
+    assert b'id="ticker-input"' in response.data
+    assert b'id="download-csv-btn"' in response.data
 
 
 def test_api_quote(client, monkeypatch):
