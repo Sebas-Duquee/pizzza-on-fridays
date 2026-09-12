@@ -113,4 +113,56 @@
     if (!currentRows.length) return;
     triggerDownload(`${currentTicker}_precios.csv`, toCsv(currentRows));
   });
+
+  // -----------------------------------------------------------------
+  // Histograma de volatilidad mensual (imagen generada con seaborn)
+  // -----------------------------------------------------------------
+  const volatilityForm = document.getElementById("volatility-form");
+  const tickersInput = document.getElementById("tickers-input");
+  const periodSelect = document.getElementById("volatility-period-select");
+  const volatilityBtn = document.getElementById("volatility-btn");
+  const volatilityStatus = document.getElementById("volatility-status");
+  const chartWrap = document.getElementById("volatility-chart-wrap");
+  const chartImg = document.getElementById("volatility-chart-img");
+  let lastChartObjectUrl = null;
+
+  function setVolatilityStatus(message, isError) {
+    volatilityStatus.hidden = !message;
+    volatilityStatus.textContent = message || "";
+    volatilityStatus.classList.toggle("is-error", Boolean(isError));
+  }
+
+  volatilityForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const tickers = tickersInput.value.trim();
+    if (!tickers) return;
+
+    volatilityBtn.disabled = true;
+    chartWrap.hidden = true;
+    setVolatilityStatus("Calculando volatilidad mensual…");
+
+    const url = `/api/volatility-chart?tickers=${encodeURIComponent(tickers)}&period=${periodSelect.value}`;
+
+    fetch(url)
+      .then(async (res) => {
+        if (!res.ok) {
+          const payload = await res.json().catch(() => ({}));
+          throw new Error(payload.error || "Error al generar el histograma");
+        }
+        return res.blob();
+      })
+      .then((blob) => {
+        if (lastChartObjectUrl) URL.revokeObjectURL(lastChartObjectUrl);
+        lastChartObjectUrl = URL.createObjectURL(blob);
+        chartImg.src = lastChartObjectUrl;
+        chartWrap.hidden = false;
+        setVolatilityStatus("");
+      })
+      .catch((err) => {
+        setVolatilityStatus(err.message || "Ocurrió un error al generar el histograma.", true);
+      })
+      .finally(() => {
+        volatilityBtn.disabled = false;
+      });
+  });
 })();

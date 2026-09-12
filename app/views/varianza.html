@@ -55,6 +55,39 @@
       </table>
     </div>
   </div>
+
+  <section class="volatility-section">
+    <h2>Volatilidad mensual (histograma)</h2>
+    <p class="varianza-header__hint">
+      Indica uno o varios tickers separados por coma. Por cada mes del período elegido se
+      calcula la volatilidad (desviación estándar de los retornos diarios) y se muestra la
+      distribución de esas volatilidades mensuales en un histograma por activo.
+    </p>
+
+    <form class="varianza-form" id="volatility-form">
+      <input
+        type="text"
+        id="tickers-input"
+        class="varianza-form__input"
+        placeholder="Tickers separados por coma, p. ej. AAPL, MSFT, GOOG"
+        autocomplete="off"
+        required
+      >
+      <select id="volatility-period-select" class="varianza-form__select">
+        <option value="1y">1 año</option>
+        <option value="2y">2 años</option>
+        <option value="5y" selected>5 años</option>
+        <option value="max">Todo</option>
+      </select>
+      <button type="submit" class="varianza-form__btn" id="volatility-btn">Generar histogramas</button>
+    </form>
+
+    <p class="varianza-status" id="volatility-status" hidden></p>
+
+    <div class="volatility-chart-wrap" id="volatility-chart-wrap" hidden>
+      <img id="volatility-chart-img" alt="Histogramas de volatilidad mensual por activo">
+    </div>
+  </section>
 </div>
 {% endblock %}
 

@@ -19,6 +19,7 @@ app/
     apps.py                 # Registro de "apps" de primer nivel del sidebar
     watchlists.py            # Registro de watchlists de la app "Gráficas"
     market_data.py            # Descarga + caché de precios/velas (yfinance)
+    analysis.py                # Volatilidad mensual + histogramas (seaborn)
   controllers/            # CONTROLLER: blueprints de Flask
     home.py                   # "/" -> redirige a la app por defecto
     graficas.py                # App "Gráficas": sidebar de watchlists + gráfico
@@ -81,6 +82,16 @@ El sidebar tiene dos niveles:
    No hace falta tocar plantillas, controladores ni JavaScript: la nueva
    sección aparece automáticamente en el sidebar, con su propia ruta
    `/graficas/w/bancos` y su propio endpoint `/api/watchlist/bancos/quotes`.
+
+### Análisis de Varianza
+
+Además de la tabla de precios, esta app calcula la **volatilidad mensual**
+(desviación estándar de los retornos diarios dentro de cada mes calendario)
+de uno o varios tickers y muestra, por cada uno, un histograma con la
+distribución de esas volatilidades a lo largo del período elegido. El
+histograma se genera en el servidor con **seaborn/matplotlib**
+(`app/models/analysis.py`) y se sirve como PNG desde
+`GET /api/volatility-chart?tickers=AAPL,MSFT&period=5y`.
 
 ## Puesta en marcha
 

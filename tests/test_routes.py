@@ -51,3 +51,25 @@ def test_api_quote(client, monkeypatch):
 def test_api_candles_rejects_bad_params(client):
     response = client.get("/api/candles/AAPL?range=bogus&interval=1d")
     assert response.status_code == 400
+
+
+def test_api_volatility_chart_requires_tickers(client):
+    response = client.get("/api/volatility-chart")
+    assert response.status_code == 400
+
+
+def test_api_volatility_chart_rejects_too_many_tickers(client):
+    tickers = ",".join(f"T{i}" for i in range(10))
+    response = client.get(f"/api/volatility-chart?tickers={tickers}")
+    assert response.status_code == 400
+
+
+def test_api_volatility_chart_returns_png(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.controllers.api.analysis.render_volatility_histograms",
+        lambda tickers, period: b"fake-png-bytes",
+    )
+    response = client.get("/api/volatility-chart?tickers=AAPL,MSFT")
+    assert response.status_code == 200
+    assert response.mimetype == "image/png"
+    assert response.data == b"fake-png-bytes"

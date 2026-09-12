@@ -1,15 +1,16 @@
-"""Controlador: API JSON que consume el JavaScript del gráfico y del sidebar."""
+"""Controlador: API JSON (y de imágenes) que consume el JavaScript del panel."""
 from __future__ import annotations
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, Response, jsonify, request
 
-from app.models import market_data
+from app.models import analysis, market_data
 from app.models.watchlists import get_watchlist
 
 bp = Blueprint("api", __name__, url_prefix="/api")
 
 ALLOWED_INTERVALS = {"1m", "5m", "15m", "30m", "1h", "1d", "1wk", "1mo"}
 ALLOWED_RANGES = {"1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "max"}
+MAX_VOLATILITY_TICKERS = 6
 
 
 @bp.get("/quote/<ticker>")
@@ -34,3 +35,23 @@ def watchlist_quotes(slug: str):
         return jsonify({"error": "watchlist no encontrada"}), 404
     quotes = {s.ticker: market_data.get_quote(s.ticker).to_dict() for s in watchlist.symbols}
     return jsonify(quotes)
+
+
+@bp.get("/volatility-chart")
+def volatility_chart():
+    """Histograma (PNG) de la volatilidad mensual de uno o varios tickers.
+
+    ?tickers=AAPL,MSFT,GOOG&period=5y
+    """
+    tickers = [t.strip().upper() for t in request.args.get("tickers", "").split(",") if t.strip()]
+    period = request.args.get("period", "5y")
+
+    if not tickers:
+        return jsonify({"error": "Indica al menos un ticker"}), 400
+    if len(tickers) > MAX_VOLATILITY_TICKERS:
+        return jsonify({"error": f"Máximo {MAX_VOLATILITY_TICKERS} tickers a la vez"}), 400
+    if period not in ALLOWED_RANGES:
+        return jsonify({"error": "period inválido"}), 400
+
+    png_bytes = analysis.render_volatility_histograms(tickers, period)
+    return Response(png_bytes, mimetype="image/png")
