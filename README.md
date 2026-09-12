@@ -85,13 +85,13 @@ El sidebar tiene dos niveles:
 
 ### Análisis de Varianza
 
-Además de la tabla de precios, esta app calcula la **volatilidad mensual**
-(desviación estándar de los retornos diarios dentro de cada mes calendario)
-de uno o varios tickers y muestra, por cada uno, un histograma con la
-distribución de esas volatilidades a lo largo del período elegido. El
-histograma se genera en el servidor con **seaborn/matplotlib**
-(`app/models/analysis.py`) y se sirve como PNG desde
-`GET /api/volatility-chart?tickers=AAPL,MSFT&period=5y`.
+Además de la tabla de precios, esta app calcula la **volatilidad mensual
+anualizada** (desviación estándar de los retornos diarios dentro de cada
+mes calendario, multiplicada por `sqrt(252)`) de uno o varios tickers y
+muestra, por cada uno, un histograma con la distribución de esas
+volatilidades a lo largo del período elegido. El histograma se genera en
+el servidor con **seaborn/matplotlib** (`app/models/analysis.py`) y se
+sirve como PNG desde `GET /api/volatility-chart?tickers=AAPL,MSFT&period=5y`.
 
 ## Puesta en marcha
 
