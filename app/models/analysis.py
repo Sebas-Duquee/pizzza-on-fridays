@@ -7,6 +7,7 @@ controlador sirve directamente como PNG.
 from __future__ import annotations
 
 import io
+import math
 
 import matplotlib
 
@@ -22,6 +23,10 @@ sns.set_theme(style="darkgrid")
 
 # Colores consistentes con el resto del panel (ver static/css/style.css).
 _PALETTE = ["#2962ff", "#26a69a", "#ef5350", "#f5a623", "#7c8a9e", "#ab47bc"]
+
+# Máximo de histogramas por fila, para poder comparar varios activos de un
+# vistazo (con 5 tickers, por ejemplo, quedan 3 arriba y 2 abajo).
+MAX_COLUMNS = 3
 
 # Días de negociación por año, estándar de mercado para anualizar una
 # volatilidad calculada a partir de retornos diarios.
@@ -53,14 +58,18 @@ def monthly_volatility(ticker: str, period: str = "5y") -> pd.Series:
 
 
 def render_volatility_histograms(tickers: list[str], period: str = "5y") -> bytes:
-    """Un histograma por ticker (apilados verticalmente) con la
-    distribución de sus volatilidades mensuales anualizadas. Devuelve un
-    PNG en bytes.
+    """Una cuadrícula de histogramas (hasta ``MAX_COLUMNS`` por fila) con la
+    distribución de la volatilidad mensual anualizada de cada ticker, para
+    poder compararlos de un vistazo. Devuelve un PNG en bytes.
     """
     n = len(tickers)
-    fig, axes = plt.subplots(n, 1, figsize=(7.5, 3.2 * n), squeeze=False)
+    ncols = min(MAX_COLUMNS, n)
+    nrows = math.ceil(n / ncols)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(4.6 * ncols, 3.4 * nrows), squeeze=False)
+    flat_axes = axes.flatten()
 
-    for i, (ax, ticker) in enumerate(zip(axes[:, 0], tickers)):
+    for i, ticker in enumerate(tickers):
+        ax = flat_axes[i]
         color = _PALETTE[i % len(_PALETTE)]
         volatility = monthly_volatility(ticker, period) * 100  # a %
 
@@ -70,11 +79,16 @@ def render_volatility_histograms(tickers: list[str], period: str = "5y") -> byte
             continue
 
         sns.histplot(volatility, bins=min(12, max(3, volatility.size)), kde=True, ax=ax, color=color)
-        ax.set_title(f"Volatilidad mensual anualizada — {ticker}  (n={volatility.size} meses)")
+        ax.set_title(f"{ticker}  (n={volatility.size} meses)")
         ax.set_xlabel("Volatilidad anualizada (%)")
         ax.set_ylabel("Frecuencia")
 
-    fig.tight_layout()
+    # Ejes sobrantes de la cuadrícula (p. ej. con 5 tickers en 2x3) se ocultan.
+    for ax in flat_axes[n:]:
+        ax.axis("off")
+
+    fig.suptitle("Volatilidad mensual anualizada")
+    fig.tight_layout(rect=(0, 0, 1, 0.95))
 
     buffer = io.BytesIO()
     fig.savefig(buffer, format="png", dpi=120)
