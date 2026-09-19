@@ -48,6 +48,7 @@ WATCHLISTS: tuple[Watchlist, ...] = (
             _s("^DJI", "Dow Jones"),
             _s("BTC-USD", "Bitcoin"),
             _s("EURUSD=X", "EUR/USD"),
+            _s("UEC", "Uranium Energy Corp"),
         ),
     ),
     Watchlist(
