@@ -1,13 +1,11 @@
-"""Controlador: raíz del sitio. Redirige a la app por defecto del sidebar."""
+"""Controlador: raíz del sitio. Muestra la landing page pública."""
 from __future__ import annotations
 
-from flask import Blueprint, redirect, url_for
-
-from app.models.apps import default_app
+from flask import Blueprint, render_template
 
 bp = Blueprint("home", __name__)
 
 
 @bp.get("/")
 def index():
-    return redirect(url_for(default_app().endpoint))
+    return render_template("landing.html")

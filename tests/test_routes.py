@@ -14,10 +14,10 @@ def _fake_quote(ticker):
     )
 
 
-def test_index_redirects_to_default_app(client):
-    response = client.get("/", follow_redirects=True)
+def test_index_shows_landing_page(client):
+    response = client.get("/")
     assert response.status_code == 200
-    assert f"/graficas/w/{WATCHLISTS[0].slug}" in response.request.path
+    assert b"Ver gr\xc3\xa1ficas en vivo" in response.data
 
 
 def test_unknown_watchlist_is_404(client):
