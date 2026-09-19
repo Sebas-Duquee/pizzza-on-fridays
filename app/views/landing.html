@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Market Dashboard — Sigue el mercado en tiempo real</title>
+  <meta name="description" content="Consulta precios en vivo de tus acciones favoritas y entiende su riesgo con gráficos claros, sin necesidad de ser experto en finanzas.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+</head>
+<body class="landing-body">
+
+  <header class="landing-nav">
+    <div class="landing-nav__brand">
+      <span class="landing-nav__logo">📈</span>
+      <span>Market Dashboard</span>
+    </div>
+    <a class="landing-nav__cta" href="{{ url_for('graficas.index') }}">Entrar al panel</a>
+  </header>
+
+  <main>
+    <section class="landing-hero">
+      <div class="landing-hero__text">
+        <span class="landing-hero__badge">Datos en vivo · Yahoo Finance</span>
+        <h1>Entiende el mercado, sin ser un experto</h1>
+        <p class="landing-hero__lead">
+          Consulta el precio de tus acciones favoritas en tiempo real y
+          descubre qué tan arriesgadas han sido, con gráficos simples
+          pensados para cualquier persona&mdash;no solo para traders.
+        </p>
+        <div class="landing-hero__actions">
+          <a class="landing-btn landing-btn--primary" href="{{ url_for('graficas.index') }}">
+            Ver gráficas en vivo
+          </a>
+          <a class="landing-btn landing-btn--ghost" href="{{ url_for('varianza.index') }}">
+            Analizar el riesgo de una acción
+          </a>
+        </div>
+      </div>
+      <div class="landing-hero__preview" aria-hidden="true">
+        <div class="landing-hero__preview-bar">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="landing-hero__preview-price">
+          <span class="landing-hero__preview-ticker">AAPL</span>
+          <span class="landing-hero__preview-value">$232.14</span>
+          <span class="landing-hero__preview-change is-up">+1.8%</span>
+        </div>
+        <div class="landing-hero__preview-chart">
+          <svg viewBox="0 0 300 100" preserveAspectRatio="none">
+            <polyline points="0,70 30,60 60,65 90,45 120,50 150,30 180,38 210,20 240,28 270,15 300,22" />
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-features">
+      <h2>Todo lo que necesitas para seguir tus inversiones</h2>
+      <div class="landing-features__grid">
+        <article class="landing-card">
+          <span class="landing-card__icon">📊</span>
+          <h3>Gráficas en vivo</h3>
+          <p>
+            Mira cómo se mueve el precio de una acción a lo largo del día,
+            la semana o el año, con el mismo tipo de gráfico que usan las
+            plataformas de bolsa profesionales.
+          </p>
+        </article>
+        <article class="landing-card">
+          <span class="landing-card__icon">⭐</span>
+          <h3>Listas de seguimiento</h3>
+          <p>
+            Organiza tus acciones favoritas en listas por tema (tecnología,
+            bancos, energía&hellip;) y consulta su precio y variación de un
+            solo vistazo.
+          </p>
+        </article>
+        <article class="landing-card">
+          <span class="landing-card__icon">🧮</span>
+          <h3>Análisis de riesgo</h3>
+          <p>
+            Descubre qué tan volátil ha sido una acción mes a mes, explicado
+            con un histograma sencillo: entre más ancho, más riesgo ha
+            tenido.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="landing-how">
+      <h2>¿Cómo funciona?</h2>
+      <ol class="landing-how__steps">
+        <li>
+          <span class="landing-how__step-number">1</span>
+          <div>
+            <h3>Elige una acción</h3>
+            <p>Busca entre las listas ya preparadas o el ticker que te interese, como AAPL o MSFT.</p>
+          </div>
+        </li>
+        <li>
+          <span class="landing-how__step-number">2</span>
+          <div>
+            <h3>Consulta su precio</h3>
+            <p>Verás el precio actual y el gráfico de su evolución, actualizado con datos reales.</p>
+          </div>
+        </li>
+        <li>
+          <span class="landing-how__step-number">3</span>
+          <div>
+            <h3>Entiende su riesgo</h3>
+            <p>Revisa el análisis de volatilidad para saber si esa acción suele tener movimientos bruscos.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="landing-final-cta">
+      <h2>Empieza a explorar el mercado ahora mismo</h2>
+      <p>Es gratis y no necesitas crear una cuenta.</p>
+      <a class="landing-btn landing-btn--primary" href="{{ url_for('graficas.index') }}">
+        Ir al panel de gráficas
+      </a>
+    </section>
+  </main>
+
+  <footer class="landing-footer">
+    <p>
+      Los precios provienen de Yahoo Finance y pueden tener un ligero
+      retraso. Esta herramienta es informativa y no constituye
+      asesoramiento financiero.
+    </p>
+  </footer>
+
+</body>
+</html>
