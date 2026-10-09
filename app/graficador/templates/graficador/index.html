@@ -24,6 +24,8 @@
      data-quote-url="{{ url_for('core_api.quote', ticker='__T__') }}"
      data-watchlists-url="{{ url_for('core_api.watchlists') }}"
      data-indicators-url="{{ url_for('graficador_api.indicator_catalog') }}"
+     data-provider-candles-url="{{ url_for('graficador_api.candles', ticker='__T__') }}"
+     data-providers-url="{{ url_for('graficador_api.provider_catalog') }}"
      data-compute-url="{{ url_for('graficador_api.compute_indicators', ticker='__T__') }}">
   <header class="graficador__header">
     <div class="graficador__heading">
@@ -54,6 +56,13 @@
       <button type="button" class="graficador__chip" data-series-type="{{ t.value }}"
               aria-pressed="{{ 'true' if loop.first else 'false' }}">{{ t.label }}</button>
       {% endfor %}
+    </div>
+    <div class="graficador__provider">
+      <label class="graficador__sr" for="graficador-provider">Proveedor de precios</label>
+      <select id="graficador-provider" class="graficador__select" aria-describedby="graficador-provider-hint">
+        <option value="yahoo">Yahoo Finance</option>
+      </select>
+      <span class="graficador__sr" id="graficador-provider-hint" role="status"></span>
     </div>
     <button type="button" class="graficador__btn graficador__btn--outline" id="graficador-indicators-btn"
             aria-haspopup="dialog" aria-controls="gind-picker">
@@ -86,7 +95,7 @@
       <p class="graficador__status" id="graficador-status" role="status"></p>
     </div>
   </div>
-  <p class="graficador__note">Datos de Yahoo Finance. Horas en UTC. Indicadores calculados con TA-Lib.</p>
+  <p class="graficador__note"><span id="graficador-source">Datos de Yahoo Finance</span>. Horas en UTC. Indicadores calculados con TA-Lib.</p>
 
   <dialog class="gind-dialog" id="gind-picker" aria-labelledby="gind-picker-title">
     <div class="gind-dialog__head">

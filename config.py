@@ -33,6 +33,12 @@ class Config:
     # página de Informes usa las copias locales de static/img/informes.
     CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL", "")
 
+    # Alpha Vantage (https://www.alphavantage.co/support/#api-key): proveedor de
+    # precios opcional del Graficador. Sin clave aparece como no disponible.
+    # El plan gratuito permite ~25 peticiones al día, de ahí la caché larga.
+    ALPHAVANTAGE_API_KEY = os.environ.get("ALPHAVANTAGE_API_KEY", "")
+    ALPHAVANTAGE_CACHE_TTL = int(os.environ.get("ALPHAVANTAGE_CACHE_TTL", "300"))
+
 
 class ProductionConfig(Config):
     DEBUG = False
@@ -43,3 +49,5 @@ class TestingConfig(Config):
     TESTING = True
     QUOTE_CACHE_TTL = 0
     CANDLE_CACHE_TTL = 0
+    ALPHAVANTAGE_API_KEY = ""
+    ALPHAVANTAGE_CACHE_TTL = 0

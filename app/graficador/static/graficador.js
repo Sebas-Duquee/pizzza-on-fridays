@@ -21,7 +21,18 @@
 
   const ticker = root.dataset.ticker;
   const apiUrl = (template) => template.replace("__T__", encodeURIComponent(ticker));
-  const candlesUrl = apiUrl(root.dataset.candlesUrl);
+  const candlesUrl = apiUrl(root.dataset.providerCandlesUrl || root.dataset.candlesUrl);
+  const providersUrl = root.dataset.providersUrl;
+  const providerSelect = document.getElementById("graficador-provider");
+  const sourceEl = document.getElementById("graficador-source");
+  const PROVIDER_KEY = "graficador:provider:v1";
+  let providerName = "Yahoo Finance";
+  let providerId = "yahoo";
+  try {
+    providerId = localStorage.getItem(PROVIDER_KEY) || providerId;
+  } catch (e) {
+    /* sin almacenamiento: se usa el de por defecto */
+  }
   const quoteUrl = apiUrl(root.dataset.quoteUrl);
 
   const overlayEl = document.getElementById("graficador-overlay");
@@ -210,8 +221,8 @@
   function load(button) {
     const id = ++request;
     intraday = !/^(1d|1wk|1mo)$/.test(button.dataset.interval);
-    showStatus("Cargando datos de Yahoo Finance…", "loading");
-    getJSON(candlesUrl + "?range=" + button.dataset.range + "&interval=" + button.dataset.interval)
+    showStatus("Cargando datos de " + providerName + "…", "loading");
+    getJSON(candlesUrl + "?provider=" + encodeURIComponent(providerId) + "&range=" + button.dataset.range + "&interval=" + button.dataset.interval)
       .then((data) => {
         if (id !== request) return;
         candles = data;
@@ -223,11 +234,69 @@
         context = { range: button.dataset.range, interval: button.dataset.interval, candles };
         dataListeners.forEach((listener) => listener(context));
         showStatus(
-          candles.length ? "" : "No hay datos de «" + ticker + "» en Yahoo Finance para este rango. Revisa el ticker.",
+          candles.length ? "" : "No hay datos de «" + ticker + "» en " + providerName + " para este rango. Revisa el ticker.",
           "empty",
         );
       })
-      .catch(() => id === request && showStatus("No pudimos cargar el gráfico. Inténtalo de nuevo.", "error"));
+      // Con error del proveedor se conservan la serie y los indicadores anteriores;
+      // el aviso queda sobre el gráfico y se quita al cambiar de rango o proveedor.
+      .catch((error) => id === request && showStatus(
+        (error && error.message && !/^HTTP /.test(error.message) ? error.message : "No pudimos cargar el gráfico. Inténtalo de nuevo.") +
+          " Prueba con otro proveedor o rango.",
+        "error",
+      ));
+  }
+
+  function currentRange() {
+    return rangeButtons.find((b) => b.getAttribute("aria-pressed") === "true") || rangeButtons[0];
+  }
+
+  // ───────────────────────── Proveedor de precios ─────────────────────────
+  function applyProvider(id, name) {
+    providerId = id;
+    providerName = name;
+    if (sourceEl) sourceEl.textContent = "Datos de " + name;
+  }
+
+  function setupProviders(list) {
+    if (!providerSelect || !list.length) return;
+    providerSelect.innerHTML = "";
+    list.forEach((p) => {
+      const option = document.createElement("option");
+      option.value = p.id;
+      option.textContent = p.available ? p.name : p.name + " (no disponible)";
+      option.dataset.name = p.name;
+      option.dataset.reason = p.available ? "" : p.reason || "";
+      providerSelect.appendChild(option);
+    });
+    // Un proveedor guardado que ya no existe o no está disponible vuelve al primero.
+    const saved = list.find((p) => p.id === providerId);
+    const chosen = saved || list[0];
+    providerSelect.value = chosen.id;
+    applyProvider(chosen.id, chosen.name);
+    describeProvider();
+  }
+
+  function describeProvider() {
+    const option = providerSelect.selectedOptions[0];
+    const hint = document.getElementById("graficador-provider-hint");
+    const reason = option ? option.dataset.reason : "";
+    providerSelect.title = reason || "Proveedor de precios";
+    if (hint) hint.textContent = reason;
+  }
+
+  if (providerSelect) {
+    providerSelect.addEventListener("change", () => {
+      const option = providerSelect.selectedOptions[0];
+      applyProvider(option.value, option.dataset.name || option.textContent);
+      try {
+        localStorage.setItem(PROVIDER_KEY, option.value);
+      } catch (e) {
+        /* sin almacenamiento: solo dura esta visita */
+      }
+      describeProvider();
+      load(currentRange());
+    });
   }
 
   function press(buttons, active) {
@@ -249,7 +318,7 @@
 
   // Contrato para graficador-indicators.js (se carga después de este fichero).
   window.GraficadorChart = {
-    root, chart, LC, ticker, THEME, getJSON, withAlpha, fmtNumber, fmtPrice, fmtVolume, escapeHtml,
+    root, chart, LC, ticker, THEME, getJSON, getProvider: () => providerId, withAlpha, fmtNumber, fmtPrice, fmtVolume, escapeHtml,
     getContext: () => context,
     // El listener recibe {range, interval, candles} tras cada carga de velas, y
     // se llama enseguida si ya hay una cargada.
@@ -259,7 +328,11 @@
     },
   };
 
-  load(rangeButtons.find((b) => b.getAttribute("aria-pressed") === "true") || rangeButtons[0]);
+  // Se conoce el catálogo antes de la primera carga para usar el proveedor recordado;
+  // si el catálogo falla, se sigue con Yahoo.
+  (providersUrl ? getJSON(providersUrl).then((data) => setupProviders(data.providers || [])) : Promise.resolve())
+    .catch(() => {})
+    .then(() => load(currentRange()));
 
   // Geist Mono llega de Google Fonts: al cargar, se vuelve a pintar el canvas con ella.
   if (document.fonts && document.fonts.ready) {

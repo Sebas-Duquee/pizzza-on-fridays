@@ -348,6 +348,40 @@ El JS está en `app/graficador/static/graficador-indicators.js` y usa
 `onData` que avisa cuando llegan velas). Sus estilos llevan el prefijo `gind-`.
 No hay patrones de velas, Ichimoku, Supertrend ni VWAP: TA-Lib no los trae.
 
+### Proveedores de precios del Graficador
+
+El Graficador permite elegir de dónde vienen las velas con el selector junto a
+los botones de rango (la elección se recuerda en `localStorage`, clave
+`graficador:provider:v1`). La lógica, sin Flask, está en
+`app/graficador/providers.py`: cada proveedor implementa `Provider`
+(`unavailable_reason()` y `get_candles(ticker, range_, interval)`), devuelve
+las mismas columnas OHLCV que `market_data.get_candles` (así los indicadores
+TA-Lib funcionan igual) y avisa de los fallos con `ProviderError`.
+
+| Proveedor | Notas |
+|---|---|
+| `yahoo` (por defecto) | `app.core.market_data` (yfinance); admite índices, divisas, futuros y cripto |
+| `alphavantage` | `TIME_SERIES_INTRADAY` (1m-1h), `DAILY`, `WEEKLY` y `MONTHLY` según el intervalo; no admite `^GSPC` ni `EURUSD=X` |
+
+**Configurar Alpha Vantage**: pide una clave gratuita en
+<https://www.alphavantage.co/support/#api-key> y ponla en el `.env`
+(`ALPHAVANTAGE_API_KEY=...`; opcional `ALPHAVANTAGE_CACHE_TTL`, 300 s por
+defecto). Sin clave el proveedor aparece como "(no disponible)" y la API
+responde 503 con el motivo. El plan gratuito permite ~25 peticiones al día y 5
+por minuto: las respuestas `Note`/`Information` de límite se traducen a un 429
+con mensaje claro, y la serie completa se cachea por símbolo e intervalo (un
+cambio de rango o el cálculo de indicadores no gasta otra petición). Si el
+`outputsize=full` diario es premium, se reintenta con `compact` (100 días).
+
+| Ruta | Contenido |
+|---|---|
+| `GET /api/graficador/providers` | `{"default", "providers": [{id, name, available, reason}]}` |
+| `GET /api/graficador/<ticker>/candles?provider=&range=&interval=` | Velas del proveedor elegido; errores `{"error"}` con 400/404/422/429/502/503/504 |
+| `GET /api/graficador/<ticker>/indicators?provider=...` | Igual que antes, calculado sobre las velas de ese proveedor |
+
+**Añadir un proveedor**: una subclase de `Provider` registrada en `PROVIDERS`.
+Aparece sola en el selector y en la API.
+
 ### Estética de Informes y Análisis de varianza
 
 `/app/informes/` y `/app/analisis-varianza/` siguen la marca del sitio rojo

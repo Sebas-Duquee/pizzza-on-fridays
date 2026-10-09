@@ -200,7 +200,7 @@ def fake_get_candles(monkeypatch):
         calls.append((ticker, range_, interval))
         return history[-100:] if range_ == "6mo" else history
 
-    monkeypatch.setattr("app.graficador.api.market_data.get_candles", get_candles)
+    monkeypatch.setattr("app.graficador.providers.market_data.get_candles", get_candles)
     return calls
 
 
@@ -231,7 +231,7 @@ def test_api_skips_the_extra_download_when_the_range_is_already_the_warmup(clien
 
 
 def test_api_with_no_data_returns_empty_series(client, monkeypatch):
-    monkeypatch.setattr("app.graficador.api.market_data.get_candles", lambda *a, **k: [])
+    monkeypatch.setattr("app.graficador.providers.market_data.get_candles", lambda *a, **k: [])
     response = client.get("/api/graficador/ZZZZ/indicators?ind=rsi:14")
     assert response.status_code == 200
     assert response.get_json() == {"time": [], "indicators": [{"spec": "rsi:14", "outputs": {"rsi": []}}]}
@@ -253,7 +253,7 @@ def test_api_rejects_invalid_requests_without_downloading_anything(client, monke
     def boom(*a, **k):
         raise AssertionError("no debe descargar datos con una petición inválida")
 
-    monkeypatch.setattr("app.graficador.api.market_data.get_candles", boom)
+    monkeypatch.setattr("app.graficador.providers.market_data.get_candles", boom)
     response = client.get(url)
     assert response.status_code == 400
     assert message in response.get_json()["error"]
