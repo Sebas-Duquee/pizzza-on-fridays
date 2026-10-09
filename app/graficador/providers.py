@@ -18,6 +18,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
+import time
 import requests
 
 from app.core import market_data
@@ -178,6 +179,9 @@ class AlphaVantageProvider(Provider):
         # se reintenta con ``compact`` (últimos 100 días) antes de rendirse.
         if function == "TIME_SERIES_DAILY" and self._is_premium(payload):
             params["outputsize"] = "compact"
+            # El plan gratuito admite 1 petición por segundo: sin pausa el reintento
+            # chocaría con la anterior.
+            time.sleep(1.1)
             payload = self._request(params)
         self._raise_for_payload(payload)
         candles = parse_series(payload, series_key)
