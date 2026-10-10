@@ -203,7 +203,7 @@
       inst.token = token;
       setState(inst, "loading");
     });
-    const query = "range=" + ctx.range + "&interval=" + ctx.interval + list.map((i) => "&ind=" + encodeURIComponent(specOf(i))).join("");
+    const query = "provider=" + encodeURIComponent(G.getProvider()) + "&range=" + ctx.range + "&interval=" + ctx.interval + list.map((i) => "&ind=" + encodeURIComponent(specOf(i))).join("");
     getJSON(computeUrl + "?" + query)
       .then((data) => {
         list.forEach((inst, index) => {

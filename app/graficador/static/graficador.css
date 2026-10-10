@@ -193,6 +193,23 @@
 
 .graficador__input:focus-visible { border-color: var(--brand); }
 
+/* Selector del proveedor de precios: pill como el buscador. */
+.graficador__select {
+  appearance: none;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease-out-soft);
+}
+
+.graficador__select:hover { border-color: rgba(23, 23, 23, 0.4); }
+.graficador__select:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-color: var(--brand); }
+
 /* ───────────────────────── Gráfico ───────────────────────── */
 
 .graficador__chart-wrap {
