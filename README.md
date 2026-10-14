@@ -265,6 +265,7 @@ Todo lo que se ve con el layout oscuro de sidebar cuelga de `/app/`:
 | `/app/informes/` | Informes |
 | `/app/analisis-varianza/` | Análisis de varianza |
 | `/app/quant-stats/` (`fundamentales`, `revision`, `tearsheet`) | Quant stats |
+| `/app/pyportfolio-opt/` | Pyportfolio opt (retornos esperados) |
 
 Las APIs siguen en `/api/...`. Las rutas antiguas (`/analisis-varianza/...`,
 `/quant-stats/...`, `/informes/...`) redirigen con **301** a su equivalente
@@ -381,6 +382,33 @@ cambio de rango o el cálculo de indicadores no gasta otra petición). Si el
 
 **Añadir un proveedor**: una subclase de `Provider` registrada en `PROVIDERS`.
 Aparece sola en el selector y en la API.
+
+### Pyportfolio opt
+
+App `app/pyportfolio_opt/` (layout de sidebar) en `/app/pyportfolio-opt/`:
+**retornos esperados anualizados** de 1 a 10 activos de Yahoo Finance con
+[PyPortfolioOpt](https://pyportfolioopt.readthedocs.io) (`pyportfolioopt` en
+`pyproject.toml`, módulo `pypfopt.expected_returns`), con dos metodologías:
+
+| Metodología | Función | Cálculo (frecuencia 252) |
+|---|---|---|
+| Media histórica | `mean_historical_return` | Con capitalización, CAGR `(∏(1 + r))^(252/N) − 1`; sin ella, `media(r) · 252` |
+| EMA | `ema_historical_return` | Media móvil exponencial de los retornos con ventana `span` (500 por defecto); con capitalización `(1 + EMA)^252 − 1` |
+
+La lógica, sin Flask, está en `app/pyportfolio_opt/expected.py`: toma los
+cierres diarios de `market_data.get_candles` (con su caché), cada activo usa
+su propia historia dentro del período y los tickers sin datos se devuelven en
+`missing`. La gráfica de barras se dibuja con `MPL_RC` y los colores de
+`app/core/charts.py` dentro de `rc_context`.
+
+| Ruta | Contenido |
+|---|---|
+| `GET /api/pyportfolio-opt/expected-returns?tickers=AAPL,MSFT&period=5y&method=both&span=500&compounding=1&log_returns=0` | JSON con `assets` (`ticker`, `start`, `end`, `observations` y el retorno de cada metodología en tanto por uno) y `missing` |
+| `GET /api/pyportfolio-opt/expected-returns.png?...` | Barras agrupadas por activo y metodología (mismos parámetros) |
+
+`method` es `historical`, `ema` o `both`; `period`, `1y`, `2y`, `5y`, `10y` o
+`max`; `span`, de 2 a 5000. Una entrada inválida responde 400 sin descargar
+nada y, si ningún ticker tiene precios, 404.
 
 ### Estética de Informes y Análisis de varianza
 
