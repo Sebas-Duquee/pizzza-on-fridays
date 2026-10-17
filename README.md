@@ -34,6 +34,9 @@ app/
     api.py                     # /api/watchlists, /api/quote, /api/candles, /api/email/send...
     templates/core/            # base.html (layout con sidebar), sidebar.html, icons.html
     static/                    # css/style.css, js/app.js, js/vendor/lightweight-charts
+  cuentas/                   # Login con InsForge: "/ingresar", "/registro", "/verificar", "/recuperar", "/salir"
+    insforge.py                # Cliente REST de /api/auth (sign-up, sign-in, verificación, reset)
+    views.py                   # Sesión en la cookie de Flask + guarda de /app/ (AUTH_REQUIRED)
   moainvest/                 # Sitio principal (diseño rojo): "/", "/graficas/..." e "/informe"
     views.py
     commands.py                # flask build-css (Tailwind sin Node)
@@ -547,3 +550,15 @@ con el check **Tests / pytest** como obligatorio.
 - El servidor de desarrollo de Flask no es apto para producción; para
   desplegar, sirve `app` (la factory `create_app()`) con Gunicorn/uWSGI
   detrás de un proxy.
+
+## Login (InsForge)
+
+La autenticación usa [InsForge](https://insforge.dev) vía su API REST
+(`app/cuentas/`). Registro con verificación por código de correo, login,
+recuperación de contraseña y logout. Con `AUTH_REQUIRED=1` (por defecto) todo
+`/app/` exige sesión; el sitio público sigue abierto.
+
+```
+INSFORGE_URL=<oss_host de .insforge/project.json>
+INSFORGE_ANON_KEY=<npx @insforge/cli secrets get ANON_KEY>
+```
