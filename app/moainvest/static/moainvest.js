@@ -100,6 +100,8 @@
     }
 
     toggle.addEventListener("click", () => setOpen(panel.hidden));
+    // Al elegir una sección (ancla) el menú se cierra y la página baja hasta ella.
+    panel.addEventListener("click", (e) => e.target.closest("a") && setOpen(false));
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && !panel.hidden) {
         setOpen(false);
@@ -109,37 +111,87 @@
   }
 
   // ───────────────────────── Precios de una watchlist ─────────────────────────
+  /** Muestra el precio de una tarjeta, o «Datos no disponibles» si el proveedor no lo da. */
+  function setQuote(card, q) {
+    const available = q.price !== null && q.price !== undefined;
+    const line = card.querySelector("[data-price-line]");
+    const unavailable = card.querySelector("[data-unavailable]");
+    if (line) line.hidden = !available;
+    if (unavailable) unavailable.hidden = available;
+    if (!available) {
+      setText(card, '[data-field="price"]', "—");
+      setText(card, '[data-field="change-pill"]', "—");
+      return;
+    }
+    setText(card, '[data-field="price"]', fmtPrice(q.price));
+    setText(card, '[data-field="currency"]', q.currency || "");
+    const pill = setText(card, '[data-field="change-pill"]', fmtPercent(q.change_percent));
+    if (pill) setTone(pill, PILL_TONES, toneOf(q.change_percent));
+    const tone = setText(card, '[data-field="change-tone"]', fmtPercent(q.change_percent));
+    if (tone) setTone(tone, TEXT_TONES, toneOf(q.change_percent));
+  }
+
   /** Rellena cada [data-quote="TICKER"] con su precio; se refresca cada 15 s. */
   function initWatchlistQuotes() {
     document.querySelectorAll("[data-watchlist-quotes]").forEach((root) => {
       const slug = root.dataset.watchlistQuotes;
       const failed = root.querySelector("[data-quotes-failed]");
+      const updated = root.querySelectorAll("[data-updated]");
       poll(() =>
         getJSON("/api/watchlist/" + encodeURIComponent(slug) + "/quotes")
           .then((quotes) => {
             if (failed) failed.hidden = true;
             root.querySelectorAll("[data-quote]").forEach((card) => {
               const q = quotes[card.dataset.quote];
-              if (!q) return;
-              setText(card, '[data-field="price"]', fmtPrice(q.price));
-              setText(card, '[data-field="currency"]', q.currency || "");
-              const pill = setText(card, '[data-field="change-pill"]', fmtPercent(q.change_percent));
-              if (pill) setTone(pill, PILL_TONES, toneOf(q.change_percent));
-              const tone = setText(card, '[data-field="change-tone"]', fmtPercent(q.change_percent));
-              if (tone) setTone(tone, TEXT_TONES, toneOf(q.change_percent));
+              if (q) setQuote(card, q);
             });
+            const time = new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+            updated.forEach((el) => (el.textContent = "Actualizado " + time));
           })
-          // Se mantienen en pantalla los últimos valores.
-          .catch(() => failed && (failed.hidden = false)),
+          // Se mantienen en pantalla los últimos valores; si nunca llegaron, se avisa en cada tarjeta.
+          .catch(() => {
+            if (failed) failed.hidden = false;
+            root.querySelectorAll("[data-quote]").forEach((card) => {
+              // Solo las tarjetas que nunca recibieron precio pasan a «Datos no disponibles».
+              if (card.querySelector('[data-field="price"] .animate-pulse')) setQuote(card, { price: null });
+            });
+            updated.forEach((el) => (el.textContent = "Sin conexión con Yahoo Finance"));
+          }),
       );
     });
+  }
+
+  // ───────────────────────── Video de fondo del hero ─────────────────────────
+  /** Muestra el video cuando puede reproducirse; sin movimiento reducido o si falla, se quita y queda el poster. */
+  function initHeroVideo() {
+    const video = document.querySelector("[data-hero-video]");
+    if (!video) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      video.remove();
+      return;
+    }
+    video.addEventListener("loadeddata", () => (video.dataset.ready = ""));
+    video.addEventListener("error", () => video.remove());
+    const playing = video.play();
+    if (playing && playing.catch) playing.catch(() => {}); // autoplay bloqueado: queda el poster
+  }
+
+  // ───────────────────────── Cabecera transparente del inicio ─────────────────────────
+  /** En el inicio, la cabecera es transparente sobre el hero y se vuelve blanca al bajar. */
+  function initHeroHeader() {
+    const header = document.querySelector("[data-hero-header]");
+    if (!header) return;
+    const sync = () => header.toggleAttribute("data-scrolled", window.scrollY > 24);
+    window.addEventListener("scroll", sync, { passive: true });
+    sync();
   }
 
   // ───────────────────────── Sparklines ─────────────────────────
   /** Línea de cierres del último mes como SVG plano (sin librería de gráficos). */
   function renderSparkline(box, closes) {
     if (closes.length < 2) {
-      box.innerHTML = '<div class="h-16" aria-hidden="true"></div>';
+      box.innerHTML = '<p class="grid h-full place-items-center text-sm text-muted">Datos no disponibles</p>';
       return;
     }
     const W = 240;
@@ -153,7 +205,7 @@
     const color = closes[closes.length - 1] >= closes[0] ? "var(--color-up)" : "var(--color-brand)";
     const gid = "spark-" + box.dataset.sparkline.replace(/[^a-z0-9]/gi, "");
     box.innerHTML =
-      '<svg viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none" class="h-16 w-full" aria-hidden="true">' +
+      '<svg viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none" class="h-full w-full" aria-hidden="true">' +
       '<defs><linearGradient id="' + gid + '" x1="0" x2="0" y1="0" y2="1">' +
       '<stop offset="0" stop-color="' + color + '" stop-opacity="0.18"/><stop offset="1" stop-color="' + color + '" stop-opacity="0"/>' +
       "</linearGradient></defs>" +
@@ -315,6 +367,8 @@
 
   initReveal();
   initMobileNav();
+  initHeroHeader();
+  initHeroVideo();
   initWatchlistQuotes();
   initSparklines();
   initChartWorkspace();

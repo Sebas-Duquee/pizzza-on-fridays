@@ -17,7 +17,7 @@ def test_resumen_lists_overview_symbols_with_chart_links(client):
     page = response.get_data(as_text=True)
     overview = get_watchlist("overview")
     assert "<title>MOAINVEST | Resumen, gráficas e informes de mercado</title>" in page
-    assert 'Resumen del <span class="accent">mercado</span>.' in page
+    assert 'Entiende el mercado <span class="hero-accent">en tiempo real.</span>' in page
     assert f'data-watchlist-quotes="{overview.slug}"' in page
     for s in overview.symbols:
         assert f'data-quote="{s.ticker}"' in page
@@ -32,16 +32,33 @@ def _nav_links(page: str, label: str) -> list[tuple[str, str]]:
     return re.findall(r'<a href="([^"]+)"[^>]*>([^<]+)</a>', nav.group(0))
 
 
+NAV = [("/#inicio", "Inicio"), ("/#mercados", "Mercados"), ("/#herramientas", "Herramientas"), ("/#nosotros", "Nosotros")]
+
+
 @pytest.mark.parametrize("label", ["Menú principal", "Menú principal móvil", "Navegación del pie de página"])
-def test_navbar_has_only_inicio_and_app(client, label):
+def test_navbar_links_to_home_sections(client, label):
     page = client.get("/").get_data(as_text=True)
-    assert _nav_links(page, label) == [("/", "Inicio"), ("/app/", "App")]
+    assert _nav_links(page, label) == NAV
 
 
 def test_navbar_marks_inicio_as_current_on_home(client):
     page = client.get("/").get_data(as_text=True)
-    assert '<a href="/" aria-current="page"' in page
-    assert '<a href="/app/" aria-current="page"' not in page
+    assert '<a href="/#inicio" aria-current="page"' in page
+    assert '<a href="/#mercados" aria-current="page"' not in page
+
+
+def test_home_sections_exist_for_anchors(client):
+    page = client.get("/").get_data(as_text=True)
+    for anchor in ("inicio", "mercados", "herramientas", "nosotros"):
+        assert f'id="{anchor}"' in page
+
+
+def test_hero_video_only_when_file_exists(client):
+    # El video es opcional: solo se referencia si el MP4 está en static/video/.
+    page = client.get("/").get_data(as_text=True)
+    has_file = (STATIC / "video" / "hero-desktop.mp4").is_file()
+    assert ("<video" in page) == has_file
+    assert ("hero-desktop.mp4" in page) == has_file
 
 
 def test_header_and_mobile_button_open_app(client):

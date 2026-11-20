@@ -41,9 +41,8 @@
 </section>
 {%- endmacro %}
 
-{#- Enlace de navegación; activo si la ruta actual empieza por su URL. -#}
-{% macro nav_link(endpoint, label, extra="") -%}
-{%- set href = url_for(endpoint) -%}
-{%- set active = (request.path == href) if endpoint == "moainvest.resumen" else request.path.startswith(href) -%}
+{#- Enlace de navegación. «Inicio» (ancla #inicio) queda activo en la home. -#}
+{% macro nav_link(href, label, extra="") -%}
+{%- set active = href.endswith("#inicio") and request.path == "/" -%}
 <a href="{{ href }}"{% if active %} aria-current="page"{% endif %} class="transition-colors hover:text-ink {{ 'text-ink' if active else 'text-muted' }}{% if extra %} {{ extra }}{% endif %}">{{ label }}</a>
 {%- endmacro %}

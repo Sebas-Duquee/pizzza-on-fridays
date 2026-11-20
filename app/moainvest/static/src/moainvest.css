@@ -200,3 +200,134 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ───────────────────────── Inicio: hero cinematográfico ─────────────────────────
+   Sin capas (@layer) a propósito: estas reglas deben ganar a las utilidades de
+   Tailwind cuando la cabecera o los botones van sobre fondo oscuro. */
+.hero-stage {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(55% 60% at 74% 42%, rgba(200, 16, 46, 0.2), transparent 70%),
+    radial-gradient(90% 70% at 50% 0%, #1a1a1c 0%, #0b0b0c 55%, #050505 100%);
+}
+.hero-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(5, 5, 5, 0.78) 0%, rgba(5, 5, 5, 0.5) 38%, rgba(5, 5, 5, 0.12) 72%, rgba(5, 5, 5, 0.05) 100%);
+}
+
+.hero-accent {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--color-brand-bright);
+}
+
+/* Radar: anillos y punto central en SVG, barrido rojo y destellos en CSS. */
+.radar {
+  position: relative;
+  width: min(80vw, 30rem);
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.radar__sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: conic-gradient(from 0deg, rgba(200, 16, 46, 0) 0deg 300deg, rgba(200, 16, 46, 0.3) 355deg, rgba(200, 16, 46, 0) 360deg);
+  animation: radar-sweep 12s linear infinite;
+}
+.radar__core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin: -0.25rem;
+  border-radius: 9999px;
+  background: var(--color-brand-bright);
+  box-shadow: 0 0 18px 4px rgba(200, 16, 46, 0.55);
+}
+.radar__blip {
+  position: absolute;
+  width: 0.375rem;
+  height: 0.375rem;
+  margin: -0.1875rem;
+  border-radius: 9999px;
+  background: var(--color-brand-bright);
+  animation: radar-blip 4.8s ease-in-out infinite;
+}
+@keyframes radar-sweep {
+  to { transform: rotate(360deg); }
+}
+@keyframes radar-blip {
+  0%, 100% { opacity: 0.15; }
+  12% { opacity: 0.9; }
+  35% { opacity: 0.2; }
+}
+
+/* Botones translúcidos sobre el hero y cabecera transparente sin scroll. */
+.dark-ghost {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+.dark-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.site-header {
+  transition: background-color 0.5s ease, border-color 0.5s ease, backdrop-filter 0.5s ease;
+}
+.site-header[data-scrolled] {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-color: var(--color-line);
+}
+.site-header:not([data-scrolled]) {
+  background: transparent;
+  border-color: transparent;
+}
+.site-header:not([data-scrolled]) nav a {
+  color: rgba(255, 255, 255, 0.7);
+}
+.site-header:not([data-scrolled]) nav a:hover,
+.site-header:not([data-scrolled]) nav a[aria-current] {
+  color: #fff;
+}
+.site-header:not([data-scrolled]) .nav-toggle {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+.site-header:not([data-scrolled]) .dark-ghost {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+/* Video (o poster) de fondo del hero: a pantalla completa, bajo el overlay y el radar. */
+.hero-video {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  filter: grayscale(0.5) contrast(1.12);
+}
+video.hero-video:not([data-ready]) {
+  opacity: 0;
+}
+video.hero-video[data-ready] {
+  transition: opacity 1.2s ease;
+}
