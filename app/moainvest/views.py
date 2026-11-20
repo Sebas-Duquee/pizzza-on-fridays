@@ -9,6 +9,8 @@ registro de watchlists; los precios, velas e informes los pide el JavaScript
 """
 from __future__ import annotations
 
+import os
+
 from flask import Blueprint, abort, redirect, render_template, url_for
 
 from app.core.navigation import default_app
@@ -23,11 +25,19 @@ bp = Blueprint(
     static_url_path="/static/moainvest",
 )
 
-# Navegación principal (cabecera, menú móvil y pie de página).
+# Navegación principal (cabecera, menú móvil y pie de página): anclas de la home,
+# así que funcionan también desde las demás páginas del sitio.
 MAIN_NAV = (
-    ("moainvest.resumen", "Inicio"),
-    ("moainvest.app_home", "App"),
+    ("inicio", "Inicio"),
+    ("mercados", "Mercados"),
+    ("herramientas", "Herramientas"),
+    ("nosotros", "Nosotros"),
 )
+
+# Medios del hero: solo se usan si el archivo existe en moainvest/static/.
+HERO_VIDEO_DESKTOP = "video/hero-desktop.mp4"
+HERO_VIDEO_MOBILE = "video/hero-mobile.mp4"
+HERO_POSTER = "poster/hero.jpg"
 
 # Rangos del gráfico de velas: etiqueta del botón, range e interval de /api/candles.
 CHART_RANGES = (
@@ -44,7 +54,20 @@ DEFAULT_RANGE = "1M"
 
 @bp.app_context_processor
 def inject_moainvest_nav() -> dict:
-    return {"moainvest_nav": MAIN_NAV}
+    home = url_for("moainvest.resumen")
+    return {"moainvest_nav": tuple((f"{home}#{anchor}", label) for anchor, label in MAIN_NAV)}
+
+
+def _static_exists(filename: str) -> bool:
+    return os.path.isfile(os.path.join(bp.root_path, "static", filename))
+
+
+def hero_media() -> dict:
+    """Rutas del video y del poster del hero solo si el archivo existe; si no, no se pone ninguna ruta."""
+    desktop = HERO_VIDEO_DESKTOP if _static_exists(HERO_VIDEO_DESKTOP) else None
+    mobile = HERO_VIDEO_MOBILE if _static_exists(HERO_VIDEO_MOBILE) else desktop
+    poster = HERO_POSTER if _static_exists(HERO_POSTER) else None
+    return {"desktop": desktop, "mobile": mobile, "poster": poster}
 
 
 def chart_url(watchlist: Watchlist, ticker: str | None = None) -> str:
@@ -54,7 +77,13 @@ def chart_url(watchlist: Watchlist, ticker: str | None = None) -> str:
 @bp.get("/")
 def resumen():
     overview = get_watchlist("overview") or WATCHLISTS[0]
-    return render_template("moainvest/resumen.html", watchlist=overview, chart_url=chart_url, teams=TEAMS)
+    return render_template(
+        "moainvest/resumen.html",
+        watchlist=overview,
+        chart_url=chart_url,
+        teams=TEAMS,
+        hero=hero_media(),
+    )
 
 
 @bp.get("/app/", strict_slashes=False)

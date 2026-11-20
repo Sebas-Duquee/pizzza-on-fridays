@@ -2,65 +2,209 @@
 {% import "moainvest/_macros.html" as ui with context %}
 {% import "core/icons.html" as icons %}
 
+{% block header_class %}site-header fixed inset-x-0 top-0 z-50 border-b border-transparent{% endblock %}
+{% block header_attrs %} data-hero-header{% endblock %}
+
 {% block content %}
-{% call ui.page_intro("Mercado en vivo · Yahoo Finance", lead="Índices, cripto y divisas de un vistazo. Los precios se actualizan cada 15 segundos.") %}
-  Resumen del <span class="accent">mercado</span>.
-{% endcall %}
+{#- Todo el contenido de precios vive en un solo contenedor: moainvest.js sondea
+    /api/watchlist/overview/quotes una vez y rellena la franja y el radar. -#}
+{% set strip_tickers = ("^GSPC", "^IXIC", "^DJI", "BTC-USD") %}
+<div data-watchlist-quotes="{{ watchlist.slug }}">
 
-<div class="mx-auto w-full max-w-6xl px-5 sm:px-8 py-12 sm:py-16" data-watchlist-quotes="{{ watchlist.slug }}">
-  <p role="status" data-quotes-failed hidden class="mb-6 rounded-xl bg-brand-soft px-4 py-3 text-sm text-brand-deep">
-    No pudimos actualizar los precios. Se muestran los últimos valores disponibles.
-  </p>
-  <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    {% for s in watchlist.symbols %}
-    <li data-reveal style="--i: {{ loop.index0 }}">
-      <a href="{{ chart_url(watchlist, s.ticker) }}" data-quote="{{ s.ticker }}"
-         class="group block h-full rounded-2xl border border-line bg-white p-6 transition-[border-color,box-shadow,transform] duration-500 ease-out-soft hover:-translate-y-1 hover:border-ink/20 hover:shadow-[0_24px_48px_-30px_rgba(23,23,23,.4)]">
-        <div class="flex items-start justify-between gap-3">
-          <div class="min-w-0">
-            <p class="truncate text-lg font-semibold tracking-tight">{{ s.display_name }}</p>
-            <p class="font-mono text-xs tracking-[0.1em] text-muted">{{ s.ticker }}</p>
+  {# ───────────── Hero ───────────── #}
+  <section id="inicio" aria-labelledby="hero-title" class="hero-stage flex min-h-[92svh] flex-col">
+    {#- Fondo: video en bucle si existe el MP4; si no, el poster; si no, el degradado CSS. -#}
+    {% if hero.desktop %}
+    <video class="hero-video" autoplay muted loop playsinline preload="metadata" aria-hidden="true" tabindex="-1" data-hero-video
+           {% if hero.poster %}poster="{{ url_for('moainvest.static', filename=hero.poster) }}"{% endif %}>
+      {% if hero.mobile != hero.desktop %}
+      <source src="{{ url_for('moainvest.static', filename=hero.mobile) }}" type="video/mp4" media="(max-width: 767px)">
+      {% endif %}
+      <source src="{{ url_for('moainvest.static', filename=hero.desktop) }}" type="video/mp4">
+    </video>
+    {% elif hero.poster %}
+    <img class="hero-video" src="{{ url_for('moainvest.static', filename=hero.poster) }}" alt="" aria-hidden="true" width="1920" height="1080" fetchpriority="high">
+    {% endif %}
+    <div class="mx-auto grid w-full max-w-6xl flex-1 items-center gap-12 px-5 pt-28 pb-12 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:gap-8 lg:pt-32">
+      <div class="max-w-2xl">
+        <p class="hero-in mb-6 flex items-center gap-3 font-mono text-xs tracking-[0.2em] text-white/70 uppercase" style="--i: 0">
+          <span aria-hidden="true" class="h-px w-8 bg-brand-bright"></span>
+          RADAR MOA
+        </p>
+        <h1 id="hero-title" class="hero-in text-balance text-[2.75rem] leading-[1.02] font-semibold tracking-[-0.045em] sm:text-7xl" style="--i: 1">
+          Entiende el mercado <span class="hero-accent">en tiempo real.</span>
+        </h1>
+        <p class="hero-in mt-7 max-w-xl text-pretty text-lg leading-relaxed text-white/70 sm:text-xl" style="--i: 2">
+          Explora activos, analiza movimientos y convierte datos en decisiones de inversión.
+        </p>
+        <div class="hero-in mt-10 flex flex-col gap-3 sm:flex-row" style="--i: 3">
+          <a href="{{ url_for('moainvest.graficas') }}" class="{{ ui.btn('primary', 'lg') }}">Explorar mercados</a>
+          <a href="{{ url_for('moainvest.app_home') }}" class="{{ ui.btn('secondary', 'lg', 'dark-ghost') }}">Abrir herramientas</a>
+        </div>
+      </div>
+
+      <div class="hero-in flex justify-center lg:justify-end" style="--i: 2" aria-hidden="true">
+        <div class="radar">
+          <svg viewBox="0 0 200 200" class="absolute inset-0 size-full" fill="none">
+            <g stroke="rgba(255,255,255,.16)" stroke-width="0.6">
+              <circle cx="100" cy="100" r="25"/>
+              <circle cx="100" cy="100" r="50"/>
+              <circle cx="100" cy="100" r="75"/>
+              <circle cx="100" cy="100" r="99.5" stroke="rgba(255,255,255,.28)"/>
+              <path d="M100 0v200M0 100h200"/>
+            </g>
+          </svg>
+          <div class="radar__sweep"></div>
+          <span class="radar__blip" style="top: 30%; left: 64%; animation-delay: 0s"></span>
+          <span class="radar__blip" style="top: 62%; left: 28%; animation-delay: 1.6s"></span>
+          <span class="radar__blip" style="top: 72%; left: 70%; animation-delay: 3.1s"></span>
+          <span class="radar__core"></span>
+        </div>
+      </div>
+    </div>
+
+    {# Franja inferior de mercado: solo datos de la watchlist «overview». #}
+    <div class="hero-in relative border-t border-white/10 bg-black/35 backdrop-blur-sm" style="--i: 4">
+      <div class="mx-auto w-full max-w-6xl px-5 sm:px-8">
+        <p role="status" data-quotes-failed hidden class="py-3 text-sm text-white/70">
+          No pudimos actualizar los precios. Se muestran los últimos valores disponibles.
+        </p>
+        <ul class="grid grid-cols-2 divide-x divide-white/10 md:grid-cols-4" aria-label="Indicadores de mercado">
+          {% for s in watchlist.symbols if s.ticker in strip_tickers %}
+          <li class="flex min-w-0 flex-col gap-2 py-5 pr-4 pl-4 first:pl-0 md:pl-6 md:first:pl-0 {{ 'max-md:border-t max-md:border-white/10' if loop.index > 2 else '' }}">
+            <p class="flex items-center gap-2 text-sm text-white/70">
+              <span class="truncate">{{ s.display_name }}</span>
+              {% if s.ticker == "BTC-USD" %}<span class="rounded-full border border-brand-bright/40 px-2 py-0.5 font-mono text-[0.62rem] tracking-[0.12em] text-brand-bright uppercase">Destacado</span>{% endif %}
+            </p>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1" data-quote="{{ s.ticker }}">
+              <p data-price-line class="font-mono text-xl font-medium tabular-nums tracking-tight" aria-live="polite">
+                <span data-field="price"><span class="inline-block h-6 w-24 animate-pulse rounded bg-white/10 align-middle"></span></span><span data-field="currency" class="ml-1 text-xs text-white/60"></span>
+              </p>
+              <p data-unavailable hidden class="text-sm text-white/60">Datos no disponibles</p>
+              <span data-field="change-pill" class="inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-xs tabular-nums bg-white/10 text-white/70">—</span>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        <p class="pb-4 font-mono text-[0.68rem] tracking-[0.12em] text-white/50 uppercase">
+          Fuente: Yahoo Finance · <span data-updated>Cargando precios…</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {# ───────────── Radar del mercado ───────────── #}
+  <section id="mercados" aria-labelledby="radar-title" class="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
+    <div class="grid gap-10 lg:grid-cols-[1fr_2fr] lg:gap-16">
+      <div>
+        <p class="eyebrow mb-4">Radar del mercado</p>
+        <h2 id="radar-title" class="text-balance text-3xl font-semibold tracking-[-0.03em] sm:text-5xl">
+          Activos <span class="accent">destacados</span>.
+        </h2>
+        <p class="mt-5 max-w-sm leading-relaxed text-muted">
+          Los movimientos de hoy y la tendencia del último mes de la watchlist de resumen.
+        </p>
+      </div>
+      <ul class="divide-y divide-line border-y border-line">
+        {% for s in watchlist.symbols %}
+        <li data-reveal style="--i: {{ loop.index0 }}">
+          <a href="{{ chart_url(watchlist, s.ticker) }}" data-quote="{{ s.ticker }}"
+             class="group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-3 py-5 transition-colors hover:bg-mist/70 sm:grid-cols-[minmax(0,1.2fr)_9rem_auto] sm:px-3">
+            <span class="min-w-0">
+              <span class="block truncate text-lg font-semibold tracking-tight">{{ s.display_name }}</span>
+              <span class="font-mono text-xs tracking-[0.1em] text-muted">{{ s.ticker }}</span>
+            </span>
+            <span class="hidden h-12 sm:block" data-sparkline="{{ s.ticker }}">
+              <span class="block h-12 animate-pulse rounded-lg bg-mist" aria-hidden="true"></span>
+            </span>
+            <span class="text-right">
+              <span data-price-line class="block font-mono text-lg font-medium tabular-nums tracking-tight" aria-live="polite">
+                <span data-field="price"><span class="inline-block h-5 w-20 animate-pulse rounded bg-mist align-middle"></span></span><span data-field="currency" class="ml-1 text-xs text-muted"></span>
+              </span>
+              <span data-unavailable hidden class="block text-sm text-muted">Datos no disponibles</span>
+              <span data-field="change-pill" class="mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-xs tabular-nums bg-mist text-muted">—</span>
+            </span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+
+  {# ───────────── Análisis del mercado ───────────── #}
+  <section aria-labelledby="analisis-title" class="border-y border-line bg-mist">
+    <div class="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
+      <p class="eyebrow mb-4">Análisis del mercado</p>
+      <h2 id="analisis-title" class="max-w-3xl text-balance text-3xl font-semibold tracking-[-0.03em] sm:text-5xl">
+        Del dato al <span class="accent">patrón</span>, en un vistazo.
+      </h2>
+      <div class="mt-12 grid gap-6 md:grid-cols-2">
+        {% for s in watchlist.symbols if s.ticker in ("^GSPC", "BTC-USD") %}
+        <figure data-reveal style="--i: {{ loop.index0 }}" class="rounded-2xl border border-line bg-white p-6 sm:p-8">
+          <figcaption class="flex items-baseline justify-between gap-4">
+            <span>
+              <span class="block text-lg font-semibold tracking-tight">{{ s.display_name }}</span>
+              <span class="font-mono text-xs tracking-[0.1em] text-muted">Cierres · último mes</span>
+            </span>
+            <a href="{{ chart_url(watchlist, s.ticker) }}" class="inline-flex items-center gap-1 text-sm text-muted transition-colors hover:text-brand">
+              Ver gráfica {{ icons.icon("arrow-right", extra_class="size-4") }}
+            </a>
+          </figcaption>
+          <div class="mt-8 h-56" data-sparkline="{{ s.ticker }}">
+            <div class="h-full animate-pulse rounded-lg bg-mist" aria-hidden="true"></div>
           </div>
-          {{ icons.icon("arrow-up-right", extra_class="size-5 shrink-0 text-muted transition-[color,transform] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brand") }}
-        </div>
-        <div class="mt-5 flex items-end justify-between gap-3">
-          <p class="font-mono text-2xl font-medium tabular-nums tracking-tight" aria-live="polite">
-            <span data-field="price"><span class="inline-block h-7 w-28 animate-pulse rounded bg-mist align-middle"></span></span><span data-field="currency" class="ml-1.5 text-xs text-muted"></span>
-          </p>
-          <span data-field="change-pill" class="inline-flex items-center rounded-full px-2.5 py-1 font-mono text-xs tabular-nums bg-mist text-muted">—</span>
-        </div>
-        <div class="mt-4" data-sparkline="{{ s.ticker }}">
-          <div class="h-16 animate-pulse rounded-lg bg-mist" aria-hidden="true"></div>
-        </div>
-        <p class="mt-2 text-xs text-muted">Último mes · ver gráfica</p>
-      </a>
-    </li>
-    {% endfor %}
-  </ul>
+        </figure>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
 
-  {% set shortcuts = [
-    ("moainvest.graficas", "candlestick-chart", "Gráficas", "Velas en vivo de cada activo, por watchlist y con rangos de 1 día a todo el histórico."),
-    ("moainvest.informe", "file-text", "Informe", "Elige tus watchlists, revisa el informe de activos y envíalo por correo."),
-    ("personas.index", "layers", "Personas", "Quiénes somos, nuestro camino por niveles y el crecimiento de la comunidad."),
-  ] %}
-  <ul class="mt-16 grid gap-4 md:grid-cols-2">
-    {% for endpoint, icon, title, body in shortcuts %}
-    <li data-reveal style="--i: {{ loop.index0 }}">
-      <a href="{{ url_for(endpoint) }}" class="group flex h-full items-start gap-5 rounded-2xl border border-line bg-mist p-6 transition-colors hover:border-brand/40 sm:p-8">
-        <span class="grid size-12 shrink-0 place-items-center rounded-xl bg-white text-brand transition-colors group-hover:bg-brand group-hover:text-white">
-          {{ icons.icon(icon, extra_class="size-5", stroke_width=1.6) }}
-        </span>
-        <span>
-          <span class="flex items-center gap-2 text-xl font-semibold tracking-tight">
-            {{ title }}
-            {{ icons.icon("arrow-right", extra_class="size-4 transition-transform group-hover:translate-x-0.5") }}
+  {# ───────────── Herramientas ───────────── #}
+  <section id="herramientas" aria-labelledby="herramientas-title" class="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
+    <p class="eyebrow mb-4">Herramientas MOAINVEST</p>
+    <h2 id="herramientas-title" class="max-w-3xl text-balance text-3xl font-semibold tracking-[-0.03em] sm:text-5xl">
+      Cuatro formas de <span class="accent">leer</span> el mercado.
+    </h2>
+    <ol class="mt-12 divide-y divide-line border-y border-line">
+      {% set tools = [
+        ("graficador.index", "Graficador", "Gráfico de velas de cualquier ticker de Yahoo Finance, con rangos de un día a todo el histórico."),
+        ("informes.index", "Informes", "Elige tus watchlists, revisa el informe de activos y envíalo por correo."),
+        ("quant_stats.index", "Quant Stats", "Análisis cuantitativo de cualquier activo, con métricas sobre sus retornos diarios."),
+        ("pyportfolio_opt.index", "PyPortfolio Opt", "Retornos esperados anualizados de 1 a 10 activos, con PyPortfolioOpt."),
+      ] %}
+      {% for endpoint, title, body in tools %}
+      <li data-reveal style="--i: {{ loop.index0 }}">
+        <a href="{{ url_for(endpoint) }}" class="group grid grid-cols-[auto_1fr_auto] items-center gap-x-6 gap-y-2 py-7 transition-colors hover:text-brand sm:gap-x-10 sm:py-9">
+          <span class="font-mono text-sm text-muted">0{{ loop.index }}</span>
+          <span class="min-w-0">
+            <span class="block text-2xl font-semibold tracking-tight sm:text-4xl">{{ title }}</span>
+            <span class="mt-2 block max-w-xl leading-relaxed text-muted">{{ body }}</span>
           </span>
-          <span class="mt-1.5 block leading-relaxed text-muted">{{ body }}</span>
-        </span>
-      </a>
-    </li>
-    {% endfor %}
-  </ul>
+          {{ icons.icon("arrow-up-right", extra_class="size-6 text-muted transition-[color,transform] group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:text-brand") }}
+        </a>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  {# ───────────── Llamado final ───────────── #}
+  <section aria-labelledby="cta-title" class="hero-stage relative">
+    <div class="mx-auto w-full max-w-6xl px-5 py-24 text-center sm:px-8 sm:py-32">
+      <h2 id="cta-title" class="mx-auto max-w-3xl text-balance text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">
+        Explora el mercado <span class="hero-accent">ahora.</span>
+      </h2>
+      <p class="mx-auto mt-6 max-w-xl text-pretty text-lg leading-relaxed text-white/70">
+        Precios, gráficas e informes listos para usar, sin tarjetas de más.
+      </p>
+      <div class="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <a href="{{ url_for('moainvest.app_home') }}" class="{{ ui.btn('primary', 'lg') }}">Explorar la app</a>
+        <a href="{{ url_for('moainvest.graficas') }}" class="{{ ui.btn('secondary', 'lg', 'dark-ghost') }}">Ver gráficas</a>
+        <a href="{{ url_for('moainvest.informe') }}" class="{{ ui.btn('secondary', 'lg', 'dark-ghost') }}">Ver informe</a>
+        <a href="{{ url_for('personas.index') }}" class="{{ ui.btn('secondary', 'lg', 'dark-ghost') }}">Personas</a>
+      </div>
+    </div>
+  </section>
+
+  {% include "moainvest/_equipos.html" %}
 </div>
-{% include "moainvest/_equipos.html" %}
 {% endblock %}

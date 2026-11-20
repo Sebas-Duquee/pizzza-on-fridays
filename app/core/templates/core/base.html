@@ -26,10 +26,9 @@
     </a>
     <nav class="topbar__nav" aria-label="Menú principal">
       <ul class="topbar__links">
-        {% for endpoint, label in moainvest_nav %}
-        {%- set href = url_for(endpoint) -%}
-        {#- Mismo criterio que moainvest/_macros.html: Inicio solo en "/", el resto por prefijo. -#}
-        {%- set active = (request.path == href) if endpoint == "moainvest.resumen" else request.path.startswith(href) -%}
+        {% for href, label in moainvest_nav %}
+        {#- Mismo criterio que moainvest/_macros.html: «Inicio» (#inicio) solo activo en "/". -#}
+        {%- set active = href.endswith("#inicio") and request.path == "/" -%}
         <li><a class="topbar__link{% if active %} is-active{% endif %}" href="{{ href }}"{% if active %} aria-current="page"{% endif %}>{{ label }}</a></li>
         {% endfor %}
       </ul>
